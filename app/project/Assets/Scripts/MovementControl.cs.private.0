@@ -1,0 +1,58 @@
+using System.Collections;
+using UnityEngine;
+
+abstract public class MovementControl : MonoBehaviour
+{
+    [SerializeField] protected GameControl gameControl;
+    protected CharacterController controller;
+    protected AnimationControl animationControl;
+    protected StateHandler stateHandler;
+    protected Vector3 movement;
+    protected float movementSpeed = 5f;
+    protected float jumpSpeed = 3f;
+    protected float gravityValue = -10f;
+    protected Transform enemyTransform;
+    protected bool walkButtonDown = false;
+    protected float lastWalkPressedTime = 0f;
+    protected float doubleTapTimeout = 1f;
+    protected float dashDuration = 0.25f;
+    protected float dashSpeed = 10f;
+
+    public float horizontalVelocity {get; set;}
+
+    protected virtual void Start()
+    {
+        controller = GetComponent<CharacterController>();
+        animationControl = GetComponent<AnimationControl>();
+        stateHandler = GetComponent<StateHandler>();
+    }
+
+    abstract protected void Move();
+    abstract protected void Walk();
+    abstract protected void Dash();
+    abstract protected void Crouch();
+    abstract protected void Jump();
+
+    protected IEnumerator ExecuteDash(int dashDirection) {
+        stateHandler.dashing = true;
+        float dashStartTime = Time.time;
+        
+        while(Time.time < dashStartTime + dashDuration) {
+            controller.Move(new Vector3(dashDirection, 0,0) * dashSpeed * Time.deltaTime);
+            yield return null;
+        }
+
+        stateHandler.dashing = false;
+    }
+
+    protected void FaceEnemy(Transform origin, Transform target) {
+        Vector3 distance = target.position - origin.position;
+        origin.rotation = Quaternion.Slerp(origin.rotation, Quaternion.LookRotation(distance), 5f * Time.deltaTime);
+        origin.eulerAngles = new Vector3(0, origin.eulerAngles.y, 0);
+    }
+
+    protected Vector3 ApplyGravity(Vector3 modelMovement) {
+        modelMovement.y += gravityValue * Time.deltaTime;
+        return modelMovement;
+    }
+}

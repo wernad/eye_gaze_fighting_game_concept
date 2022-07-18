@@ -1,0 +1,45 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Animations.Rigging;
+
+public class AdvancedCombat : MonoBehaviour, ICombos, ISpecialAttacks
+{
+    private Combos combos;
+    private SpecialAttacks specialAttacks;
+    private float timeLimit = 3f;
+    private float lastAttackTime = 0f;
+    private string currentAttackSequence = "";
+    private Dictionary<string,  Func<Rig, Transform, IEnumerator>> decodeAttackSequence;
+
+    void Start() {
+        combos = gameObject.AddComponent<Combos>();
+        specialAttacks = gameObject.AddComponent<SpecialAttacks>();
+        decodeAttackSequence = new Dictionary<string,  Func<Rig, Transform, IEnumerator>>{
+            {"10", LightPunchHook},
+        };
+        
+    }
+
+    public void AddAttackToSeq(int attack) {
+        if(Time.time - lastAttackTime > timeLimit) {
+            currentAttackSequence = "";
+        }
+        lastAttackTime = Time.time;
+        currentAttackSequence += attack;
+    }
+
+    public bool TryCombo(Rig rig, float transitionSpeed, Transform target) {
+        if(decodeAttackSequence.TryGetValue(currentAttackSequence, out var attack)) {
+            StartCoroutine(attack(rig, target));
+            return true;
+        } 
+        
+        return false;
+    } 
+
+    public IEnumerator LightPunchHook(Rig rig, Transform target){
+        return combos.LightPunchHook(rig, target);
+    }  
+}

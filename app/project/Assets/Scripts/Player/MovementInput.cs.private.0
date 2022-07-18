@@ -1,0 +1,98 @@
+using UnityEngine;
+
+public class MovementInput : MovementControl
+{
+    private int dashDirection = 0;
+    protected override void Start()
+    {
+        base.Start();
+        enemyTransform = GameObject.FindWithTag("Enemy").GetComponent<Transform>();
+    }
+
+    void Update()
+    {
+        if(stateHandler.recentlyHit) {
+            return;
+        }
+
+        if(!gameControl.IsGamePaused()) {
+            Move();
+        } else {
+            controller.enabled = false; 
+        }
+    }
+
+    protected override void Move() {
+        if(stateHandler.dashing) {
+            return;
+        }
+
+        if(controller.enabled == false) {
+            controller.enabled = true; 
+        }
+        //faceEnemy(myTransform, enemyTransform);
+
+        animationControl.grounded = controller.isGrounded;
+
+        Crouch();
+        Walk();
+        movement.x = horizontalVelocity * movementSpeed;
+
+        Dash();
+
+        Jump();
+        movement = ApplyGravity(movement);
+
+        controller.Move(movement * Time.deltaTime);
+    }
+
+    protected override void Walk() {
+        if(stateHandler.crouching) {
+            horizontalVelocity = 0;
+        } else {
+            horizontalVelocity = Input.GetAxisRaw("Horizontal");
+        }
+    }
+
+    protected override void Jump() {
+        if(Input.GetButton("Jump") && animationControl.grounded && !stateHandler.crouching) {
+            animationControl.jumping = true;
+            movement.y = Mathf.Sqrt(jumpSpeed * -gravityValue);
+        }
+    }
+
+    protected override void Crouch() {
+        if(Input.GetButton("Crouch") && animationControl.grounded) {
+            stateHandler.crouching = true;
+        } 
+        else {
+            stateHandler.crouching = false;
+        }
+    }
+
+    protected override void Dash() {
+        if(stateHandler.dashing) {
+            return;
+        }
+
+        if(horizontalVelocity != 0) {
+            if(!walkButtonDown) {
+                walkButtonDown = true;
+                if(Time.time < lastWalkPressedTime + doubleTapTimeout) {
+                    if(dashDirection == horizontalVelocity) {
+                        StartCoroutine(ExecuteDash(dashDirection));
+                    }
+                   
+                }
+                dashDirection =  (int)horizontalVelocity;
+                lastWalkPressedTime = Time.time;
+            }
+        } else {
+            walkButtonDown = false;
+        }
+    }
+    
+
+    
+}
+

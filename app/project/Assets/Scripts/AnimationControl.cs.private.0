@@ -1,0 +1,93 @@
+using UnityEngine;
+
+public class AnimationControl : MonoBehaviour
+{
+    private Animator animator;
+    private MovementControl movementControl;
+    private CharacterController characterController;
+    private StateHandler stateHandler;
+    private bool falling = false;
+    public bool jumping { get; set; } = false;
+    public bool grounded { get; set; } = true;
+    
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+        movementControl = GetComponent<MovementControl>();
+        characterController = GetComponent<CharacterController>();
+        stateHandler = GetComponent<StateHandler>();
+    }
+
+    void Update()
+    {
+        PlayWalkingAnimation();
+        PlayJumpAnimation();
+        PlayFallingAnimation();
+        PlayLandingAnimation();
+        PlayCrouchAnimation();
+    }
+
+    void PlayWalkingAnimation() {
+        if(grounded) {
+            if((movementControl.horizontalVelocity > 0 && IsOnLeftSide()) 
+            || (movementControl.horizontalVelocity < 0 && !IsOnLeftSide())) {
+                animator.SetBool("isWalkingF", true);
+            } 
+            else if((movementControl.horizontalVelocity > 0 && !IsOnLeftSide()) 
+            || (movementControl.horizontalVelocity < 0 && IsOnLeftSide())) {     
+                animator.SetBool("isWalkingB", true);
+            }
+            else {
+                animator.SetBool("isWalkingF", false);
+                animator.SetBool("isWalkingB", false);
+            }
+        }
+    }
+
+    void PlayJumpAnimation() {
+          if(jumping) {
+              animator.SetTrigger("Jump");
+              jumping = false;
+          }
+    }
+    void PlayFallingAnimation() {
+        if(characterController.velocity.y < 0) {
+            falling = true;
+            jumping = false;
+        }
+
+        if(falling && !animator.GetCurrentAnimatorStateInfo(0).IsName("Fall")) {
+            animator.SetTrigger("Falling");
+        }
+    }
+
+    void PlayLandingAnimation() {
+        if(falling && grounded) {
+            falling = false;
+            animator.SetTrigger("Land");
+        }
+    }
+
+    void PlayIdleAnimation() {
+        if(!falling && grounded) {
+            animator.SetTrigger("Idle");
+        }
+    }
+
+    void PlayCrouchAnimation() {
+        if(stateHandler.crouching) {
+            animator.SetBool("Crouching", true);
+        } 
+        else {
+            animator.SetBool("Crouching", false);
+        }
+    }
+
+    public bool IsOnLeftSide() {
+        if(gameObject.transform.position.x > stateHandler.enemy.position.x) {
+            return false;
+        } 
+        return true;
+    }
+
+}

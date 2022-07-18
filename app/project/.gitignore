@@ -1,0 +1,33 @@
+#Ignore everything
+*
+#but Scripts
+!.gitignore
+!Assets/
+!Assets/Scripts
+!Assets/Scripts/GameManagement/
+!Assets/Scripts/Enemy
+!Assets/Scripts/Enemy/AI
+!Assets/Scripts/Enemy/AI/TaskManagement/
+!Assets/Scripts/Player
+!Assets/Scripts/Combat
+!Assets/Scripts/Combat/CombatAnimation/
+!Assets/Scripts/Combat/CombatAnimation/CombatTree
+!Assets/Scripts/Combat/CombatAnimation/Attacks
+!Assets/Scripts/Combat/CombatAnimation/RigContainers
+!Assets/Scripts/Combat/DamageManagement/
+!Assets/Plugins
+!Assets/AprilTags
+!Assets/Scripts/*
+!Assets/Scripts/GameManagement/*
+!Assets/Scripts/Enemy/*
+!Assets/Scripts/Enemy/AI/*
+!Assets/Scripts/Enemy/AI/TaskManagement/*
+!Assets/Scripts/Player/*
+!Assets/Scripts/Combat/*
+!Assets/Scripts/Combat/CombatAnimation/*
+!Assets/Scripts/Combat/CombatAnimation/CombatTree/*
+!Assets/Scripts/Combat/CombatAnimation/Attacks/*
+!Assets/Scripts/Combat/CombatAnimation/RigContainers/*
+!Assets/Scripts/Combat/DamageManagement/*
+!Assets/Plugins/*
+!Assets/AprilTags/*

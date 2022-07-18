@@ -1,0 +1,52 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Animations.Rigging;
+
+abstract public class SimpleCombat : RigContainer
+{
+    private Dictionary<string, float> rigTransitionSpeed = new Dictionary<string, float> {
+        {"RightHandRig", 0.1f},
+        {"LeftHandRig", 0.08f},
+        {"RightFootRig", 0.1f},
+        {"LeftFootRig", 0.1f}
+    };
+
+    protected StateHandler stateHandler;
+
+    abstract protected void Attack();
+    abstract protected void Block();
+
+    protected override void Start() {
+        base.Start();
+        stateHandler = GetComponent<StateHandler>();
+    }
+
+    protected IEnumerator SimpleAttack(Rig rig) {
+        string limb = rig.ToString().Split(' ')[0];
+        stateHandler.attacking = true;
+        while(rig.weight < 1 && stateHandler.attacking) {
+            yield return new WaitForEndOfFrame();
+            rig.weight += rigTransitionSpeed[limb];
+        }
+
+        while(rig.weight > 0 && stateHandler.attacking) {
+            yield return new WaitForEndOfFrame();
+            rig.weight -= rigTransitionSpeed[limb];
+        }
+        rig.weight = 0;
+        stateHandler.attacking = false;
+    }
+    
+    protected Vector3 Target2BlockPosition(Vector3 targetPos, Transform blockCenter) {
+        Vector3 newMouseTargetPos = CombatUtilities.MoveInfrontOf(blockCenter.position, targetPos, 1f);
+        if(Mathf.Abs(targetPos.y - blockCenter.position.y) > 2.5f && newMouseTargetPos.y < blockCenter.position.y) {
+            BothHandsRig.weight = 0.5f;
+            newMouseTargetPos.y = blockCenter.position.y - 3.5f;
+        } else {
+            BothHandsRig.weight = 1;
+        }
+
+        return new Vector3(newMouseTargetPos.x, newMouseTargetPos.y, -1);
+    }
+}

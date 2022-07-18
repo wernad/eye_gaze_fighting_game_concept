@@ -1,0 +1,26 @@
+using UnityEngine;
+using UnityEngine.Animations.Rigging;
+
+public class RigContainer : MonoBehaviour
+{
+    [SerializeField] protected Transform aimTarget;
+    [SerializeField] protected Transform blockSourceBone;
+    protected Rig RightHandRig;
+    protected Rig LeftHandRig;
+    protected Rig BothHandsRig;
+    protected Rig LeftFootRig;
+    protected Rig RightFootRig;
+
+    protected virtual void Start() {
+        RightHandRig = this.transform.Find("RightHandRig").GetComponent<Rig>();
+        LeftHandRig = this.transform.Find("LeftHandRig").GetComponent<Rig>();
+        BothHandsRig = this.transform.Find("BothHandsRig").GetComponent<Rig>();
+        LeftFootRig = this.transform.Find("LeftFootRig").GetComponent<Rig>();
+        RightFootRig = this.transform.Find("RightFootRig").GetComponent<Rig>();
+        RightHandRig.weight = 0;
+        LeftHandRig.weight = 0;
+        BothHandsRig.weight = 0;
+        LeftFootRig.weight = 0;
+        RightFootRig.weight = 0;
+    }
+}

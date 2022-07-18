@@ -1,0 +1,85 @@
+using UnityEngine;
+
+public class CombatAI : SimpleCombat
+{   
+    [System.NonSerialized] public bool lastHitBlocked = false;
+    [SerializeField] private GameControl gameControl;
+    private AdvancedCombat advancedCombat;
+    private string lastAttackSource = "";
+    private MovementAI myMovementAI;
+    private EnemyStatus myStatus;
+    private GameObject[] playerBody;
+    private StateHandler myStateHandler;
+    private float blockDamageThreshold = 5f;
+    private TaskScheduler scheduler;
+    
+    protected override void Start()
+    {
+        base.Start();
+        myMovementAI = GetComponent<MovementAI>();
+        myStatus = GetComponent<EnemyStatus>();
+        myStateHandler = GetComponent<StateHandler>();
+        playerBody = GameObject.FindGameObjectsWithTag("PlayerBody");
+        scheduler = GetComponent<TaskScheduler>();
+        advancedCombat = GetComponent<AdvancedCombat>();
+    }
+
+    void Update() {
+        if(myStateHandler.recentlyHit) {
+            return;
+        }
+        
+        if(!gameControl.IsGamePaused()) {
+            Attack();
+            Block();
+        }
+    }
+    
+    protected override void Attack() {
+        if(scheduler.GetCombatTaskCount() > 0) {
+            return;
+        } else {
+            Debug.Log("taskAdded");
+            scheduler.addCombatTask(TaskScheduler.Combat, this, advancedCombat.LightPunchHook, RightHandRig, aimTarget);
+        }
+        /*if(!stateHandler.blocking && !stateHandler.attacking && myMovementAI.GetDistanceFromPlayer() <= myMovementAI.shortPunchDistance) {
+            if(lastAttackSource == "" || (lastAttackSource != "RHand" && lastHitBlocked ) || ((lastAttackSource == "RHand" && !lastHitBlocked))) {
+                changeTarget("Head");
+                StartCoroutine(WeightTransition(RightHandRig, 0.1f));
+                lastAttackSource = "RHand";
+            } else{
+                changeTarget("RThigh");
+                StartCoroutine(WeightTransition(RightFootRig, 0.1f));
+                lastAttackSource = "RFoot";
+            }   
+        } else {
+            lastAttackSource = "";
+            lastHitBlocked = false;
+        }*/
+    }
+
+    void changeTarget(string target) {
+        foreach(GameObject obj in playerBody) {
+            if(obj.name == target) {
+                aimTarget.position = obj.transform.position;
+                break;
+            }
+        }
+    }
+
+    protected override void Block() {
+        /*
+        if(myStatus.CheckThreshold(blockDamageThreshold)) {
+            stateHandler.blocking = true;
+            BothHandsRig.weight = 1;
+        } else {
+            stateHandler.blocking = false;
+            BothHandsRig.weight = 0;
+        }
+        
+        if(stateHandler.blocking) {
+            aimTarget.position = Target2BlockPosition(aimTarget.position, blockSourceBone);
+        }
+        */
+    }
+}

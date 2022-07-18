@@ -1,0 +1,114 @@
+using UnityEngine;
+
+public class CombatInput : SimpleCombat
+{
+    [SerializeField] private LayerMask aimMask;
+    [SerializeField] private GameControl gameControl;
+    private AdvancedCombat advancedCombat;
+    private AimDataReceiver aimData;
+    private Camera mainCamera;
+    private const int LightPunch = 0;
+    private const int HeavyPunch = 1;
+    private const int LightKick = 2;
+    private const int HeavyKick = 3;  
+    
+    //For debugging;
+    [SerializeField] private bool useMouse = true;
+
+    protected override void Start()
+    {
+        base.Start();
+        aimData = GetComponent<AimDataReceiver>();
+        advancedCombat = GetComponent<AdvancedCombat>();
+        mainCamera = Camera.main;
+    }
+
+    void Update()
+    {
+        if(stateHandler.recentlyHit) {
+            return;
+        }
+
+        if(!gameControl.IsGamePaused()) {
+            if(useMouse) {
+                setTargetPosition(screenToWorld(Input.mousePosition));
+            } else {
+                var (x, y) = aimData.GetCoordinates();
+                setTargetPosition(screenToWorld(new Vector3(x, y, -1)));
+            }
+       
+            Attack();
+            Block();
+        }
+        
+    }
+
+    protected override void Attack() {
+        //TODO squish all ifs into single function
+        if(!stateHandler.attacking && !stateHandler.blocking) {
+            if(Input.GetButtonDown("LightPunch")) {;
+                advancedCombat.AddAttackToSeq(LightPunch);
+                if(!advancedCombat.TryCombo(RightHandRig, 0.1f, aimTarget)) {
+                    StartCoroutine(SimpleAttack(RightHandRig));
+                }
+
+            } else if(Input.GetButtonDown("HeavyPunch")) {
+                advancedCombat.AddAttackToSeq(HeavyPunch);
+                if(!advancedCombat.TryCombo(LeftHandRig, 0.1f, aimTarget)) {
+                    StartCoroutine(SimpleAttack(LeftHandRig));
+                }
+
+            } else if(Input.GetButtonDown("LightKick")) {
+                advancedCombat.AddAttackToSeq(LightKick);
+                if(!advancedCombat.TryCombo(LeftFootRig, 0.1f, aimTarget)) {
+                    StartCoroutine(SimpleAttack(LeftFootRig));
+                }
+
+            } else if(Input.GetButtonDown("HeavyKick")) {
+                advancedCombat.AddAttackToSeq(HeavyKick);
+                if(!advancedCombat.TryCombo(RightFootRig, 0.1f,aimTarget)) {
+                    StartCoroutine(SimpleAttack(RightFootRig));
+                }
+            } 
+        }
+    }
+
+    protected override void Block() {
+        if(Input.GetButtonDown("Block") && !stateHandler.attacking) {
+           BothHandsRig.weight = 1;
+            stateHandler.blocking = true;
+
+        } else if(stateHandler.blocking && !Input.GetButton("Block")) {
+           BothHandsRig.weight = 0;
+            stateHandler.blocking = false;
+        }
+    }
+
+    Vector3 screenToWorld(Vector3 screenPosition) {
+        if(!useMouse) {
+            screenPosition.x = screenPosition.x * Screen.width;
+            screenPosition.y = screenPosition.y * Screen.height;
+        }
+
+        Ray ray = mainCamera.ScreenPointToRay(screenPosition);
+        RaycastHit hit;
+        Vector3 newPosition = new Vector3(0f, 0f, -1f);
+        
+        if(Physics.Raycast(ray, out hit, Mathf.Infinity, aimMask) && !stateHandler.attacking) {
+            newPosition = new Vector3(hit.point.x, hit.point.y, -1);
+        }
+
+        return newPosition;
+    }
+
+    //TODO Fix target position after moving away from it during attack animation.
+    void setTargetPosition(Vector3 position) {
+        if(!stateHandler.attacking && CombatUtilities.IsTargetInFront(gameObject.transform, position)) {
+            if(stateHandler.blocking) {
+               aimTarget.position = Target2BlockPosition(position,blockSourceBone);
+            } else {
+               aimTarget.position = position;
+            }
+        }
+    }
+}

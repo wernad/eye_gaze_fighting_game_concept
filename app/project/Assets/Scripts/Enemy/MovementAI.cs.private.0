@@ -1,0 +1,123 @@
+using UnityEngine;
+
+public class MovementAI : MovementControl
+{
+    public float shortPunchDistance { get; set; } = 1.7f;
+
+    private EnemyStatus status;
+
+    private bool retreating = false;
+    private bool approaching = false;
+    private bool touchingWall = false;
+    private int distanceTimestamp = 0;
+    private int timeToWait = 2;
+    private float retreatDamageThreshold = 10f;
+    private int dashDirection;
+    
+    protected override void Start()
+    {   
+        base.Start();
+        horizontalVelocity = 0f;
+        enemyTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
+        status = GetComponent<EnemyStatus>();
+    }
+
+    void Update()
+    {
+        if(stateHandler.recentlyHit) {
+            return;
+        }
+        //faceEnemy(myTransform, enemyTransform);
+
+        if(!gameControl.IsGamePaused()) {
+            //Move();
+        } else {
+            controller.enabled = false; 
+        }
+    }
+
+    protected override void Move()
+    {
+        if(stateHandler.dashing) {
+            return;
+        }
+
+        if(controller.enabled == false) {
+            controller.enabled = true;
+        }
+            
+        ShouldRetreat();
+        ShouldApproach();
+        Walk();
+
+        movement = ApplyGravity(movement);
+            
+        controller.Move(movement * Time.deltaTime);
+    }
+
+    protected override void Walk() {
+        if(approaching) {
+            horizontalVelocity = 1f;
+        } else if(retreating) {
+            horizontalVelocity = -1f;
+        } else {
+            horizontalVelocity = 0f;
+        }
+        
+        movement.x = horizontalVelocity * movementSpeed;
+    }
+    protected override void Dash()
+    {
+        StartCoroutine(ExecuteDash(dashDirection));
+    }
+
+    protected override void Crouch()
+    {
+        stateHandler.crouching = !stateHandler.crouching;
+    }
+
+    protected override void Jump()
+    {
+        animationControl.jumping = true;
+        movement.y = Mathf.Sqrt(jumpSpeed * -gravityValue);
+    }
+
+    public float GetDistanceFromPlayer() {
+        float distance = Vector3.Distance(transform.position, enemyTransform.position);
+        return distance;
+    }
+
+    void ShouldApproach() {
+        if(GetDistanceFromPlayer() > shortPunchDistance) {
+            if(!approaching && distanceTimestamp == 0) {
+                distanceTimestamp = (int)Time.fixedTime;
+            }
+        } else {
+            approaching = false;
+        }
+
+        if(((int)Time.fixedTime - distanceTimestamp) >= timeToWait && distanceTimestamp != 0 && !retreating) {
+            approaching = true;
+            distanceTimestamp = 0;
+        }
+    }
+
+    void ShouldRetreat() {
+        if(GetDistanceFromPlayer() <= shortPunchDistance * 2 && status.CheckThreshold(retreatDamageThreshold) && !touchingWall) {
+            retreating = true;
+            approaching = false;
+        } else {
+            retreating = false;
+        }
+    }
+
+    void OnTriggerEnter(Collider collider)
+    {   
+        string otherColliderName = collider.gameObject.name;
+        if(otherColliderName == "LeftWall" || otherColliderName == "RightWall") {
+                touchingWall = true;
+            } else {
+                touchingWall = false;
+            }
+    }
+}
