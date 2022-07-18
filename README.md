@@ -10,6 +10,8 @@ If afore mentioned hardware is not available, it's possible to use mouse instead
     * project - Unity project ``Requires Unity 2020.3.25f1``
     * source - source code ``Written in C#``
 
+* docs - HTML documentation ``Doxygen generated``
+
 * licenses - licenses of used assets
     * AprilTags - BSD 2-Clause "Simplified" License
 
