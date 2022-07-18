@@ -1,4 +1,3 @@
-# TODO: add build and Unity project
 # Eye Tracking Based Gaming Combat System
 
 Goal of this project was to design and implement a fighting game with an aiming mechanic using player's eye gaze. Eye gaze is tracked using specialized hardware Pupil Core.
